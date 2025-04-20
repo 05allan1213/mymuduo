@@ -40,7 +40,7 @@ public:
     // 设置fd的监听事件
     int events() const { return events_; }
     // 设置已发生的事件集合
-    int set_revents(int revt) { revents_ = revt; }
+    void set_revents(int revt) { revents_ = revt; }
 
     // 设置fd相应的事件状态，即对不同事件的监听
     void enableReading()
