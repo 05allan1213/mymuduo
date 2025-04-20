@@ -14,11 +14,11 @@ public:
     {
     }
 
-    // 将地址转化为IP地址字符串
+    // 获取点分十进制 IP 字符串
     std::string toIp() const;
-    // 将地址转化为IP地址和端口号的字符串形式
+    // 获取 "ip:port" 格式的字符串
     std::string toIpPort() const;
-    // 将地址转化为端口号
+    // 获取端口号
     uint16_t toPort() const;
 
     // 获取当前对象封装的网络地址信息

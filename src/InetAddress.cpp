@@ -11,7 +11,7 @@ InetAddress::InetAddress(uint16_t port, std::string ip)
     addr_.sin_addr.s_addr = inet_addr(ip.c_str()); // 设置IP地址，使用网络字节序
 }
 
-// 将地址转化为IP地址字符串
+// 获取点分十进制 IP 字符串
 std::string InetAddress::toIp() const
 {
     // addr_
@@ -20,7 +20,7 @@ std::string InetAddress::toIp() const
     return buf;
 }
 
-// 将地址转化为IP地址和端口号的字符串形式
+// 获取 "ip:port" 格式的字符串
 std::string InetAddress::toIpPort() const
 {
     // ip:port
@@ -33,7 +33,7 @@ std::string InetAddress::toIpPort() const
     return buf;
 }
 
-// 将地址转化为端口号
+// 获取端口号
 uint16_t InetAddress::toPort() const
 {
     return ntohs(addr_.sin_port);
