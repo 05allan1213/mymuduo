@@ -10,8 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "未指定构建类型，默认为: ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(MYMUDUO_SOURCES src/client.cpp)
-# file(GLOB MYMUDUO_SOURCES src/*.cpp)
+file(GLOB MYMUDUO_SOURCES src/*.cpp)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -23,6 +22,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(libmymuduo PUBLIC Threads::Threads)
 
 add_executable(mymuduo main.cpp)
+target_include_directories(mymuduo PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(mymuduo PRIVATE libmymuduo) 
 
 message(STATUS "项目 '${PROJECT_NAME}' 配置完成!")
