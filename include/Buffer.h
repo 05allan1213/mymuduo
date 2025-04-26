@@ -102,10 +102,12 @@ class Buffer
         // 策略一：扩容(内存重新分配)
         else
         {
-            size_t readalbe = readableBytes();
-            std::copy(begin() + readerIndex_, begin() + writerIndex_, begin() + kCheapPrepend);
-            readerIndex_ = kCheapPrepend;
-            writerIndex_ = readerIndex_ + readalbe;
+            size_t readalbe = readableBytes();   // 计算需要移动的数据量
+            std::copy(begin() + readerIndex_,    // 源：当前可读数据的开始
+                      begin() + writerIndex_,    // 源：当前可读数据的结束
+                      begin() + kCheapPrepend);  // 目标：标准前置空间之后的位置
+            readerIndex_ = kCheapPrepend;  // 更新读索引到移动后数据的新起始位置
+            writerIndex_ = readerIndex_ + readalbe;  // 更新写索引到移动后数据的新结束位置
         }
     }
 
