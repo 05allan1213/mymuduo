@@ -5,7 +5,7 @@
 #include "Logger.h"
 
 // 强制要求传入的 EventLoop* loop (baseLoop) 不能为空
-EventLoop* CheckLoopNotNull(EventLoop* loop)
+static EventLoop* CheckLoopNotNull(EventLoop* loop)
 {
     if (loop == nullptr)
     {

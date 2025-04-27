@@ -15,3 +15,5 @@ using WriteCompleteCallback =
     std::function<void(const TcpConnectionPtr&)>;  // 当底层发送缓冲区的数据发送完时，调用相应的回调
 using MessageCallback = std::function<void(
     const TcpConnectionPtr&, Buffer*, Timestamp)>;  // 当已连接的客户端有数据可读时，调用相应的回调
+using HighWaterMarkCallback = std::function<void(
+    const TcpConnectionPtr&, size_t)>;  // 当发送缓冲区超过设定值时，调用相应的回调
