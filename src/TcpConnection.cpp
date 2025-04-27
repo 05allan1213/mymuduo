@@ -61,38 +61,45 @@ void TcpConnection::send(const std::string& buf)
         }
         else
         {
-            loop_->runInLoop(std::bind(&TcpConnection::sendInLoop, this, buf.c_str(), buf.size()));
+            std::string message = buf;
+            // 此处runInLoop底层仍然是调用queueInLoop
+            loop_->runInLoop(
+                std::bind(&TcpConnection::sendInLoop, this, message.data(), message.size()));
         }
     }
 }
 
 void TcpConnection::sendInLoop(const void* data, size_t len)
 {
-    ssize_t nwrote = 0;
-    size_t remaining = len;
-    bool faultError = false;
+    ssize_t nwrote = 0;       // 记录本次发送的字节数
+    size_t remaining = len;   // 记录剩余未发送的字节数，初始为总长度
+    bool faultError = false;  // 记录是否发生错误
 
     if (state_ == kDisconnected)
     {
         LOG_ERROR("disconnected, give up writing");
         return;
     }
-
+    // 当前Channel关注写事件，且发送缓冲区为空，则尝试将数据写入Socket
     if (!channel_->isWriting() && outputBuffer_.readableBytes() == 0)
     {
         nwrote = ::write(channel_->fd(), data, len);
-        if (nwrote > 0)
+        if (nwrote > 0)  // 成功写入nwrote字节
         {
+            // 更新剩余字节数
             remaining = len - nwrote;
+            // 如果全部发送完，就调用写回调
             if (remaining == 0 && writeCompleteCallback_)
             {
                 loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
             }
         }
-        else
+        else  // 写入出错
         {
+            // 因为出错，所以并没有写入任何字节
             nwrote = 0;
-            if (errno != EWOULDBLOCK)
+            // 检查errno，判断错误类型
+            if (errno != EWOULDBLOCK || errno != EAGAIN)
             {
                 LOG_ERROR("TcpConnection::sendInLoop");
                 if (errno == EPIPE || errno == ECONNRESET)
@@ -102,18 +109,24 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
             }
         }
     }
+    // 连接未发生错误，但要么未尝试发送，要么只发送了部分数据
     if (!faultError && remaining > 0)
     {
+        // 获取当前缓冲区已有数据量
         size_t oldlen = outputBuffer_.readableBytes();
+        // 表示本次添加数据后将首次超过高水位线
         if (oldlen + remaining >= highWaterMark_ && oldlen < highWaterMark_ &&
             highWaterMarkCallback_)
         {
+            // 触发高水位回调
             loop_->queueInLoop(
                 std::bind(highWaterMarkCallback_, shared_from_this(), oldlen + remaining));
         }
+        // 将未发送的数据(remaining字节,从 data+nwrote 开始)添加到 outputBuffer_末尾
         outputBuffer_.append((char*)data + nwrote, remaining);
-        if (!channel_->isWriting())
+        if (!channel_->isWriting())  // 如果Channel未关注写事件
         {
+            // 通知Poller关注该connfd的写事件
             channel_->enableWriting();
         }
     }
@@ -140,6 +153,7 @@ void TcpConnection::shutdownInLoop()
 void TcpConnection::connectEstablished()
 {
     setState(kConnected);
+    // 解决 Channel 和 TCPConnection 之间潜在的生命周期问题
     channel_->tie(shared_from_this());
     channel_->enableReading();
 
